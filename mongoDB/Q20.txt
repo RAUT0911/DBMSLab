@@ -1,0 +1,67 @@
+1.Create Database DYPIT
+-> use DYPIT
+2. Create following Collections
+Teachers(Tname,dno,dname,experience,salary,date_of_joining )
+-> db.createCollection("Teachers")
+
+Students(Sname,roll_no,class)
+-> db.createCollection("Students")
+
+//Inserting data
+// Insert sample data into the "Teachers" collection
+db.Teachers.insertMany([
+  { Tname: "John", dno: 101, dname: "Computer", experience: 5, salary: 26000, date_of_joining: ISODate("2022-01-10") },
+  { Tname: "Mary", dno: 102, dname: "IT", experience: 7, salary: 27000, date_of_joining: ISODate("2020-05-15") },
+  { Tname: "Alice", dno: 103, dname: "E&TC", experience: 3, salary: 24000, date_of_joining: ISODate("2021-11-20") },
+  { Tname: "Praveen", dno: 101, dname: "Computer", experience: 8, salary: 23000, date_of_joining: ISODate("2019-03-01") }
+])
+
+// Insert sample data into the "Students" collection
+db.Students.insertMany([
+  { Sname: "Alex", roll_no: 1, class: "A" },
+  { Sname: "Emma", roll_no: 25, class: "B" },
+  { Sname: "Oliver", roll_no: 3, class: "A" },
+  { Sname: "Sophia", roll_no: 4, class: "C" }
+])
+
+3. Find the information about two teachers
+-> db.Teachers.find().limit(2)
+
+4. Find the information about all teachers of computer department
+-> db.Teachers.find({ dname: "Computer" })
+
+5. Find the information about all teachers of computer,IT,and e&TC department
+-> db.Teachers.find({ dname: { $in: ["Computer", "IT", "E&TC"] } })
+
+6. Find the information about all teachers of computer,IT,and E&TC department having salary 
+greate than or equl to 25000/-
+-> db.Teachers.find({ dname: { $in: ["Computer", "IT", "E&TC"] }, salary: { $gte: 25000 } })
+
+7. Find the student information having roll_no = 25 or Sname=xyz
+-> db.Students.find({ $or: [{ roll_no: 25 }, { Sname: "xyz" }] })
+
+8. Update the experience of teacher-praveen to 10years, if the entry is not available in database
+consider the entry as new entry.
+-> db.Teachers.update({ Tname: "Praveen" }, { $set: { experience: 10 } }, { upsert: true })
+
+9. Update the deparment of all the teachers working in IT deprtment to COMP
+-> db.Teachers.updateMany({ dname: "IT" }, { $set: { dname: "COMP" } })
+
+10. find the teachers name and their experience from teachers collection
+-> db.Teachers.find({}, { Tname: 1, experience: 1 })
+
+11. Using Save() method insert one entry in department collection
+-> db.createCollection("Department")
+
+db.Department.insertOne({
+  dept_name: "HR",
+  location: "Block A"
+})
+
+
+13. Delete all the doccuments from teachers collection having IT dept.
+-> db.Teachers.deleteMany({ dname: "IT" })
+
+14. display with pretty() method, the first 5 documents in teachers collection in ascending order
+-> db.Teachers.find().sort({ Tname: 1 }).limit(5).pretty()
+
