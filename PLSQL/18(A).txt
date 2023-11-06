@@ -1,0 +1,111 @@
+mysql> -- Create the database
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE DATABASE mydb;
+Query OK, 1 row affected (0.03 sec)
+
+mysql> USE mydb;
+Database changed
+mysql>
+mysql> -- Create the clientmstr table
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE TABLE clientmstr (
+    ->     client_id INT PRIMARY KEY,
+    ->     client_name VARCHAR(255),
+    ->     balance DECIMAL(10, 2)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql>
+mysql> -- Create the audit_trade table to store old values
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE TABLE audit_trade (
+    ->     audit_id INT AUTO_INCREMENT
+    -> PRIMARY KEY,
+    ->     action_type VARCHAR(10),  -- 'UPDATE' or 'DELETE'
+    ->     client_id INT,
+    ->     old_client_name VARCHAR(255),
+    ->     old_balance DECIMAL(10, 2),
+    ->     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER update_clientmstr_row
+    -> BEFORE UPDATE ON clientmstr
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     IF OLD.client_name != NEW.client_name OR OLD.balance != NEW.balance THEN
+    ->         INSERT INTO audit_trade (action_type, client_id, old_client_name, old_balance)
+    ->         VALUES ('UPDATE', OLD.client_id, OLD.client_name, OLD.balance);
+    ->     END IF;
+    -> END;
+    -> $$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER delete_clientmstr_row
+    -> BEFORE DELETE ON clientmstr
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     INSERT INTO audit_trade (action_type, client_id, old_client_name, old_balance)
+    ->     VALUES ('DELETE', OLD.client_id, OLD.client_name, OLD.balance);
+    -> END;
+    -> $$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER update_clientmstr_statement
+    -> AFTER UPDATE ON clientmstr
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     IF OLD.client_name != NEW.client_name OR OLD.balance != NEW.balance THEN
+    ->         INSERT INTO audit_trade (action_type, client_id, old_client_name, old_balance)
+    ->         VALUES ('UPDATE', OLD.client_id, OLD.client_name, OLD.balance);
+    ->     END IF;
+    -> END;
+    -> $$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> -- Insert a sample record into clientmstr
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO clientmstr (client_id, client_name, balance)
+    -> VALUES (1, 'John Doe', 1000.00);
+Query OK, 1 row affected (0.01 sec)
+
+mysql>
+mysql> -- Update the client name and balance
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> UPDATE clientmstr
+    -> SET client_name = 'Jane Smith', balance = 1200.00
+    -> WHERE client_id = 1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql>
+mysql> -- Delete a record
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> DELETE FROM clientmstr WHERE client_id = 1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql>
+mysql> -- Check the audit_trade table to see the recorded old values
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM audit_trade;
++----------+-------------+-----------+-----------------+-------------+---------------------+
+| audit_id | action_type | client_id | old_client_name | old_balance | timestamp           |
++----------+-------------+-----------+-----------------+-------------+---------------------+
+|        1 | UPDATE      |         1 | John Doe        |     1000.00 | 2023-11-06 18:48:15 |
+|        2 | UPDATE      |         1 | John Doe        |     1000.00 | 2023-11-06 18:48:15 |
+|        3 | DELETE      |         1 | Jane Smith      |     1200.00 | 2023-11-06 18:48:15 |
++----------+-------------+-----------+-----------------+-------------+---------------------+
+3 rows in set (0.00 sec)

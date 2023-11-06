@@ -1,0 +1,96 @@
+mysql> create database 18B;
+Query OK, 1 row affected (0.03 sec)
+
+mysql> use 18B;
+Database changed
+mysql> CREATE TABLE Emp (
+    ->     e_no INT PRIMARY KEY,
+    ->     e_name VARCHAR(255),
+    ->     salary DECIMAL(10, 2)
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> CREATE TABLE Tracking (
+    ->     e_no INT,
+    ->     salary DECIMAL(10, 2)
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER before_insert_emp
+    -> BEFORE INSERT ON Emp
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     IF NEW.salary < 50000.00 THEN
+    ->         SIGNAL SQLSTATE '45000'
+    ->         SET MESSAGE_TEXT = 'Salary must be greater than or equal to Rs. 50,000.';
+    ->     ELSE
+    ->         INSERT INTO Tracking (e_no, salary)
+    ->         VALUES (NEW.e_no, NEW.salary);
+    ->     END IF;
+    -> END;
+    -> $$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> DELIMITER $$
+mysql> CREATE TRIGGER before_update_emp
+    -> BEFORE UPDATE ON Emp
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     IF NEW.salary < 50000.00 THEN
+    ->         SIGNAL SQLSTATE '45000'
+    ->         SET MESSAGE_TEXT = 'Salary must be greater than or equal to Rs. 50,000.';
+    ->     ELSE
+    ->         INSERT INTO Tracking (e_no, salary)
+    ->         VALUES (NEW.e_no, NEW.salary);
+    ->     END IF;
+    -> END;
+    -> $$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> -- Try to insert a record with a salary less than Rs. 50,000 (should fail)
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO Emp (e_no, e_name, salary)
+    -> VALUES (1, 'John Doe', 40000.00);
+ERROR 1644 (45000): Salary must be greater than or equal to Rs. 50,000.
+mysql>
+mysql> -- Insert a record with a salary greater than or equal to Rs. 50,000
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO Emp (e_no, e_name, salary)
+    -> VALUES (2, 'Jane Smith', 60000.00);
+Query OK, 1 row affected (0.03 sec)
+
+mysql>
+mysql> -- Try to update the salary to a value less than Rs. 50,000 (should fail)
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> UPDATE Emp
+    -> SET salary = 45000.00
+    -> WHERE e_no = 2;
+ERROR 1644 (45000): Salary must be greater than or equal to Rs. 50,000.
+mysql>
+mysql> -- Update the salary to a value greater than or equal to Rs. 50,000
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> UPDATE Emp
+    -> SET salary = 55000.00
+    -> WHERE e_no = 2;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql>
+mysql> -- Check the Tracking table to see the stored new values
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT * FROM Tracking;
++------+----------+
+| e_no | salary   |
++------+----------+
+|    2 | 60000.00 |
+|    2 | 55000.00 |
++------+----------+
+2 rows in set (0.00 sec)
