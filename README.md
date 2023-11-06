@@ -1,3 +1,3 @@
 # DBMSLab
-Refer Problem Statement 
-Refer DBMS Problem statement
+
+Refer DBMS Problem statement.pdf
