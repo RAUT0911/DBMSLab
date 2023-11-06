@@ -1,0 +1,248 @@
+mysql> use p9;
+Database changed
+mysql> CREATE TABLE Deposit (
+    ->  actno INT NOT NULL AUTO_INCREMENT,
+    ->  cname VARCHAR(255) NOT NULL,
+    ->  bname VARCHAR(255) NOT NULL,
+    ->  amount DECIMAL(10,2) NOT NULL,
+    ->  adate DATE NOT NULL,
+    ->  PRIMARY KEY (actno),
+    ->  FOREIGN KEY (bname) REFERENCES Branch(bname)
+    -> );
+ERROR 1824 (HY000): Failed to open the referenced table 'branch'
+mysql> CREATE TABLE Branch (
+    ->  bname VARCHAR(255) NOT NULL,
+    ->  city VARCHAR(255) NOT NULL,
+    ->  PRIMARY KEY (bname)
+    -> );
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> CREATE TABLE Deposit (
+    ->  actno INT NOT NULL AUTO_INCREMENT,
+    ->  cname VARCHAR(255) NOT NULL,
+    ->  bname VARCHAR(255) NOT NULL,
+    ->  amount DECIMAL(10,2) NOT NULL,
+    ->  adate DATE NOT NULL,
+    ->  PRIMARY KEY (actno),
+    ->  FOREIGN KEY (bname) REFERENCES Branch(bname)
+    -> )
+    -> ;
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> CREATE TABLE Customers (
+    ->  cname VARCHAR(255) NOT NULL,
+    ->  city VARCHAR(255) NOT NULL,
+    ->  PRIMARY KEY (cname)
+    -> );
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> CREATE TABLE Borrow (
+    ->  loanno INT NOT NULL AUTO_INCREMENT,
+    ->  cname VARCHAR(255) NOT NULL,
+    ->  bname VARCHAR(255) NOT NULL,
+    ->  amount DECIMAL(10,2) NOT NULL,
+    ->  PRIMARY KEY (loanno),
+    ->  FOREIGN KEY (cname) REFERENCES Customers(cname)
+    -> );
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> INSERT INTO Branch (bname, city) VALUES ('Perryridge', 'San Jose');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Branch (bname, city) VALUES ('Campbell', 'Campbell');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Customers (cname, city) VALUES ('Anil', 'San Jose');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Customers (cname, city) VALUES ('John', 'Campbell');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Deposit (cname, bname, amount, adate) VALUES ('Anil',
+    -> 'Perryridge', 4500, '1996-12-01');
+Query OK, 1 row affected (0.04 sec)
+
+mysql> NSERT INTO Deposit (cname, bname, amount, adate) VALUES ('John',
+    -> 'Campbell', 3500, '1997-05-01');
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NSERT INTO Deposit (cname, bname, amount, adate) VALUES ('John',
+'Campbell', 35' at line 1
+mysql> INSERT INTO Deposit (cname, bname, amount, adate) VALUES ('John',
+    -> 'Campbell', 3500, '1997-05-01');
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Borrow (cname, bname, amount) VALUES ('Anil', 'Perryridge',
+    -> 2000);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> INSERT INTO Borrow (cname, bname, amount) VALUES ('John', 'Campbell',
+
+    -> 1500);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> desc Deposit;
++--------+---------------+------+-----+---------+----------------+
+| Field  | Type          | Null | Key | Default | Extra          |
++--------+---------------+------+-----+---------+----------------+
+| actno  | int           | NO   | PRI | NULL    | auto_increment |
+| cname  | varchar(255)  | NO   |     | NULL    |                |
+| bname  | varchar(255)  | NO   | MUL | NULL    |                |
+| amount | decimal(10,2) | NO   |     | NULL    |                |
+| adate  | date          | NO   |     | NULL    |                |
++--------+---------------+------+-----+---------+----------------+
+5 rows in set (0.05 sec)
+
+mysql> desc Branch;
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| bname | varchar(255) | NO   | PRI | NULL    |       |
+| city  | varchar(255) | NO   |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> desc Customers;
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| cname | varchar(255) | NO   | PRI | NULL    |       |
+| city  | varchar(255) | NO   |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> desc Borrow;
++--------+---------------+------+-----+---------+----------------+
+| Field  | Type          | Null | Key | Default | Extra          |
++--------+---------------+------+-----+---------+----------------+
+| loanno | int           | NO   | PRI | NULL    | auto_increment |
+| cname  | varchar(255)  | NO   | MUL | NULL    |                |
+| bname  | varchar(255)  | NO   |     | NULL    |                |
+| amount | decimal(10,2) | NO   |     | NULL    |                |
++--------+---------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+mysql> select * from Deposit;
++-------+-------+------------+---------+------------+
+| actno | cname | bname      | amount  | adate      |
++-------+-------+------------+---------+------------+
+|     1 | Anil  | Perryridge | 4500.00 | 1996-12-01 |
+|     2 | John  | Campbell   | 3500.00 | 1997-05-01 |
++-------+-------+------------+---------+------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from Borrow;
++--------+-------+------------+---------+
+| loanno | cname | bname      | amount  |
++--------+-------+------------+---------+
+|      1 | Anil  | Perryridge | 2000.00 |
+|      2 | John  | Campbell   | 1500.00 |
++--------+-------+------------+---------+
+2 rows in set (0.00 sec)
+
+mysql> select * from Customers;
++-------+----------+
+| cname | city     |
++-------+----------+
+| Anil  | San Jose |
+| John  | Campbell |
++-------+----------+
+2 rows in set (0.00 sec)
+
+mysql> select * from Branch;
++------------+----------+
+| bname      | city     |
++------------+----------+
+| Campbell   | Campbell |
+| Perryridge | San Jose |
++------------+----------+
+2 rows in set (0.00 sec)
+
+mysql> select cname
+    -> from Deposit
+    -> where amount > 4000;
++-------+
+| cname |
++-------+
+| Anil  |
++-------+
+1 row in set (0.00 sec)
+
+mysql> select adate
+    -> from Deposit
+    -> where cname = 'Anil';
++------------+
+| adate      |
++------------+
+| 1996-12-01 |
++------------+
+1 row in set (0.00 sec)
+
+mysql> select actno,amount
+    -> from Deposit
+    -> where adate Between '1996-12-01' and '1997-05-01';
++-------+---------+
+| actno | amount  |
++-------+---------+
+|     1 | 4500.00 |
+|     2 | 3500.00 |
++-------+---------+
+2 rows in set (0.00 sec)
+
+mysql> select avg(amount) as AvgAccBal
+    -> from Deposit
+    -> where bname='Perryridge';
++-------------+
+| AvgAccBal   |
++-------------+
+| 4500.000000 |
++-------------+
+1 row in set (0.05 sec)
+
+mysql> select avg(amount) as AvgAccBal decimal(10,2)
+    -> from Deposit
+    -> where bname = 'Perryridge';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'decimal(10,2)
+from Deposit
+where bname = 'Perryridge'' at line 1
+mysql> select avg(amount) decimal(10,2) as AvgBal
+    -> from Deposit
+    -> where bname = 'Perryridge';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'decimal(10,2) as AvgBal
+from Deposit
+where bname = 'Perryridge'' at line 1
+mysql> select avg(amount) as AvgAccBal
+    -> from Deposit
+    -> where bname='Perryridge';
++-------------+
+| AvgAccBal   |
++-------------+
+| 4500.000000 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select bname
+    -> from Deposit
+    -> group by bname
+    -> having avg(amount)>1200;
++------------+
+| bname      |
++------------+
+| Campbell   |
+| Perryridge |
++------------+
+2 rows in set (0.05 sec)
+
+mysql> delete from Deposit
+    -> where amount < 5000;
+Query OK, 2 rows affected (0.01 sec)
+
+mysql> select * from Deposit;
+Empty set (0.00 sec)
+
+mysql> create view ActiveDeposits as
+    -> select actno,cname,bname,amount ,adate
+    -> from Deposit
+    -> where amount > 5000;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select cname from ActiveDeposits where bname ='Perryridge';
+Empty set (0.02 sec)

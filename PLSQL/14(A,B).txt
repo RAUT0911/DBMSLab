@@ -1,0 +1,76 @@
+a.
+mysql> create table Stud(Roll int,Att int,Status varchar(255));
+Query OK, 0 rows affected (0.06 sec)
+
+mysql> insert into Stud(Roll,Att)
+    -> values(1,40),(2,50),(3,60),(4,70),(5,80),(6,90);
+
+DELIMITER //
+CREATE PROCEDURE CheckAndUpdateAttendance(IN studentRoll INT)
+BEGIN
+   DECLARE v_attendance INT;
+   DECLARE v_status CHAR(2);
+
+   SELECT Att, Status
+   INTO v_attendance, v_status
+   FROM Stud
+   WHERE Roll = studentRoll;
+
+   IF v_attendance < 75 THEN
+      UPDATE Stud
+      SET Status = 'D'
+      WHERE Roll = studentRoll;
+      SELECT 'Term not granted' AS Message;
+   ELSE
+      UPDATE Stud
+      SET Status = 'ND'
+      WHERE Roll = studentRoll;
+      SELECT 'Term granted' AS Message;
+   END IF;
+END;
+//
+DELIMITER ;
+
+mysql> call CheckAndUpdateAttendance(5)
+    -> $$
+
+mysql> select * from Stud;
+    -> $$
+b.
+mysql> create table account_master(account_number int,balance int);
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> insert into account_master(account_number,balance)
+    -> values(1234,45000),(4321,90000),(6789,100000);
+
+DELIMITER //
+CREATE PROCEDURE WithdrawMoney(
+    p_account_number INT,
+    p_withdraw_amount DECIMAL(10, 2)
+)
+BEGIN
+    DECLARE v_current_balance DECIMAL(10, 2);
+
+    SELECT balance INTO v_current_balance
+    FROM account_master
+    WHERE account_number = p_account_number;
+
+    IF p_withdraw_amount > v_current_balance THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Withdrawal amount exceeds the current balance.';
+    ELSE
+        UPDATE account_master
+        SET balance = balance - p_withdraw_amount
+        WHERE account_number = p_account_number;
+    END IF;
+
+    SELECT 'Withdrawal successful.' AS Message;
+END;
+//
+DELIMITER ;
+
+mysql> call WithdrawMoney(1234,20000);
+
+mysql> select * from account_master;
+
+

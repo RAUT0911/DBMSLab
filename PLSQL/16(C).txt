@@ -1,0 +1,88 @@
+mysql> CREATE DATABASE college_db;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> USE college_db;
+Database changed
+mysql> CREATE TABLE stud21 (
+    ->   roll INT(4),
+    ->   att INT(4),
+    ->   status CHAR(1)
+    -> );
+Query OK, 0 rows affected, 2 warnings (0.04 sec)
+
+mysql> INSERT INTO stud21 (roll, att, status)
+    -> VALUES (1, 70, 'P');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO stud21 (roll, att, status)
+    -> VALUES (2, 80, 'P');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO stud21 (roll, att, status)
+    -> VALUES (3, 60, 'P');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> -- Add more student records as needed.
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE TABLE D_Stud (
+    ->   roll INT(4) PRIMARY KEY,
+    ->   old_status CHAR(1),
+    ->   new_status CHAR(1),
+    ->   update_date DATE
+    -> );
+Query OK, 0 rows affected, 1 warning (0.02 sec)
+
+mysql> DELIMITER //
+mysql> CREATE PROCEDURE update_student_statuses()
+    -> BEGIN
+    ->   DECLARE done INT DEFAULT 0;
+    ->   DECLARE student_roll INT;
+    ->   DECLARE student_att INT;
+    ->
+    ->   DECLARE cur CURSOR FOR
+    ->     SELECT roll, att FROM stud21 WHERE att < 75;
+    ->
+    ->   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    ->
+    ->   OPEN cur;
+    ->
+    ->   read_loop: LOOP
+    ->     FETCH cur INTO student_roll, student_att;
+    ->
+    ->     IF done = 1 THEN
+    ->       LEAVE read_loop;
+    ->     END IF;
+    ->
+    ->     -- Insert a record into the D_Stud table
+    ->     INSERT INTO D_Stud (roll, old_status, new_status, update_date)
+    ->     SELECT student_roll, status, 'D', CURDATE()
+    ->     FROM stud21
+    ->     WHERE roll = student_roll;
+    ->
+    ->     -- Update the student status to "D"
+    ->     UPDATE stud21
+    ->     SET status = 'D'
+    ->     WHERE roll = student_roll;
+    ->   END LOOP;
+    ->
+    ->   CLOSE cur;
+    -> END;
+    -> //
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> DELIMITER ;
+mysql> select * from D_stud;
+Empty set (0.00 sec)
+
+mysql> CALL update_student_statuses();
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> select * from D_stud;
++------+------------+------------+-------------+
+| roll | old_status | new_status | update_date |
++------+------------+------------+-------------+
+|    1 | P          | D          | 2023-11-06  |
+|    3 | P          | D          | 2023-11-06  |
++------+------------+------------+-------------+
+2 rows in set (0.00 sec)

@@ -1,0 +1,78 @@
+mysql> USE organization_db;
+Database changed
+mysql> CREATE TABLE employees (
+    ->   employee_id INT PRIMARY KEY,
+    ->   employee_name VARCHAR(50),
+    ->   salary DECIMAL(10, 2)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO employees (employee_id, employee_name, salary)
+    -> VALUES (1, 'Employee1', 50000.00);
+Query OK, 1 row affected (0.02 sec)
+
+mysql> INSERT INTO employees (employee_id, employee_name, salary)
+    -> VALUES (2, 'Employee2', 60000.00);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> INSERT INTO employees (employee_id, employee_name, salary)
+    -> VALUES (3, 'Employee3', 45000.00);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> -- Add more employee records as needed.
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> CREATE TABLE increment_salary (
+    ->   update_id INT AUTO_INCREMENT PRIMARY KEY,
+    ->   employee_id INT,
+    ->   previous_salary DECIMAL(10, 2),
+    ->   new_salary DECIMAL(10, 2),
+    ->   update_date DATE
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> DELIMITER //
+mysql> CREATE PROCEDURE update_salaries()
+    -> BEGIN
+    ->   DECLARE avg_salary DECIMAL(10, 2);
+    ->   SELECT AVG(salary) INTO avg_salary FROM employees;
+    ->
+    ->   -- Update salaries and insert records into increment_salary table in a single query
+    ->   INSERT INTO increment_salary (employee_id, previous_salary, new_salary, update_date)
+    ->   SELECT employee_id, salary, salary * 1.1, CURDATE()
+    ->   FROM employees
+    ->   WHERE salary < avg_salary;
+    ->
+    ->   -- Update salaries directly in the employees table
+    ->   UPDATE employees
+    ->   SET salary = salary * 1.1
+    ->   WHERE salary < avg_salary;
+    -> END;
+    -> //
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> DELIMITER ;
+mysql> select * from employee;
+ERROR 1146 (42S02): Table 'organization_db.employee' doesn't exist
+mysql> select * from employees;
++-------------+---------------+----------+
+| employee_id | employee_name | salary   |
++-------------+---------------+----------+
+|           1 | Employee1     | 50000.00 |
+|           2 | Employee2     | 60000.00 |
+|           3 | Employee3     | 45000.00 |
++-------------+---------------+----------+
+3 rows in set (0.00 sec)
+
+mysql> CALL update_salaries();
+Query OK, 2 rows affected (0.03 sec)
+
+mysql> select * from employees;
++-------------+---------------+----------+
+| employee_id | employee_name | salary   |
++-------------+---------------+----------+
+|           1 | Employee1     | 55000.00 |
+|           2 | Employee2     | 60000.00 |
+|           3 | Employee3     | 49500.00 |
++-------------+---------------+----------+
+3 rows in set (0.00 sec)
