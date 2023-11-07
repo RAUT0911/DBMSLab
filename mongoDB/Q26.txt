@@ -1,0 +1,26 @@
+Create a MongoDB Database and Import the JSON Data:
+
+First, you'll need to create a MongoDB database, and then import the JSON data into a collection. Here's how to do it using the MongoDB shell
+
+// Create a new database named 'zipcode'
+use zipcode
+
+// Create a collection named 'zips' and import data from the 'zip.json' file
+mongoimport --db zipcode --collection zips --file /path/to/zip.json
+
+
+2. Define the Map and Reduce Functions
+var mapFunction = function () {
+    emit(this.state, this.pop);
+};
+
+var reduceFunction = function (key, values) {
+    return Array.sum(values);
+};
+
+3.Execute the Map-Reduce Operation
+ db.zips.mapReduce(mapFunction, reduceFunction, { out: "state_population" })
+
+4.Query the Result
+db.state_population.find()
+

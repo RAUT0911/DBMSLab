@@ -1,0 +1,55 @@
+use library
+db.createCollection('books')
+
+//Insert some sample book documents into the 'books' collection:
+db.books.insertMany([
+    { title: "Book 1", pages: 200 },
+    { title: "Book 2", pages: 300 },
+    { title: "Book 3", pages: 150 },
+    { title: "Book 4", pages: 280 }
+])
+
+//Use the aggregation framework to find the number of small and big books:
+db.books.aggregate([
+    {
+        $project: {
+            title: 1,
+            pages: 1,
+            bookSize: {
+                $cond: {
+                    if: { $gte: ["$pages", 250] },
+                    then: "Big Book",
+                    else: "Small Book"
+                }
+            }
+        }
+    },
+    {
+        $group: {
+            _id: "$bookSize",
+            count: { $sum: 1 }
+        }
+    }
+])
+
+//Create Map Reduce Function
+var mapFunction = function () {
+    if (this.pages < 250) {
+        emit("Small Book", 1);
+    } else {
+        emit("Big Book", 1);
+    }
+};
+
+var reduceFunction = function (key, values) {
+    return Array.sum(values);
+};
+
+
+db.books.mapReduce(mapFunction, reduceFunction, { out: "book_sizes" });
+
+//Call Function
+db.book_sizes.find()
+
+
+
